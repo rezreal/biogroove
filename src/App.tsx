@@ -6,9 +6,6 @@ import SpotifyWebApi from "spotify-web-api-js";
 import spotifyLogo from "./Spotify_Logo_RGB_Green.png"
 import {AudioAnalysis, StructuredAudioAnalysis} from "./Analysis";
 
-import * as d3 from "d3"
-
-
 function getLocalStorageOrDefault<T>(key:any, defaultValue: T): T {
   const stored = localStorage.getItem(key);
   if (!stored) {
@@ -20,7 +17,7 @@ function getLocalStorageOrDefault<T>(key:any, defaultValue: T): T {
 
 function App() {
 
-  const [params, setParams] = useState<{
+  const [params] = useState<{
     minDepth: number,
     maxDepth: number,
     speed: number,
@@ -251,13 +248,28 @@ function App() {
 
                     {
                         playingTrack.item?.album.images[0] &&
-                        <div><br /><img src={playingTrack.item?.album.images[0].url} width={playingTrack.item?.album.images[0].width} height={playingTrack.item?.album.images[0].height}/></div>
+                        <div><br /><img alt={"Album cover"} src={playingTrack.item?.album.images[0].url} width={playingTrack.item?.album.images[0].width} height={playingTrack.item?.album.images[0].height}/></div>
                     }
 
                     <br/><strong>{playingTrack.item?.name}</strong>
                     <br/>by: {playingTrack.item?.artists[0]?.name}
                     <br/>Album: {playingTrack.item?.album?.name}
                     <br/><button onClick={analyze}>Analyze</button>
+
+
+                </div>
+            }
+
+            {
+                currentAnalysis &&
+                <div>
+                    <dl>
+                        <dt>Dancability: </dt><dd>{currentAnalysis[0].danceability}</dd>
+                        <dt>Acousticness: </dt><dd>{currentAnalysis[0].acousticness}</dd>
+                        <dt>Energy: </dt><dd>{currentAnalysis[0].energy}</dd>
+                        <dt>Liveness: </dt><dd>{currentAnalysis[0].liveness}</dd>
+                        <dt>Tempo: </dt><dd>{currentAnalysis[0].tempo}</dd>
+                    </dl>
 
 
                 </div>
