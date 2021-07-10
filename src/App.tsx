@@ -305,7 +305,7 @@ function App() {
                         <dt>Acousticness: </dt><dd>{renderPercent(currentAnalysis[0].acousticness)}</dd>
                         <dt>Energy: </dt><dd>{renderPercent(currentAnalysis[0].energy)}</dd>
                         <dt>Liveness: </dt><dd>{renderPercent(currentAnalysis[0].liveness)}</dd>
-                        <dt>Tempo: </dt><dd>{renderPercent(currentAnalysis[0].tempo)} BPM</dd>
+                        <dt>Tempo: </dt><dd>{currentAnalysis[0].tempo} BPM</dd>
                     </dl>
                 </div>
             }

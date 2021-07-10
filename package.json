@@ -8,6 +8,7 @@
     "@testing-library/user-event": "^12.1.10",
     "@types/d3": "^7.0.0",
     "d3": "^7.0.0",
+    "github-fork-ribbon-css": "^0.2.3",
     "oidc-client": "^1.11.5",
     "react": "^17.0.2",
     "react-d3-library": "^1.1.8",

@@ -6740,6 +6740,11 @@ get-value@^2.0.3, get-value@^2.0.6:
   resolved "https://registry.npmjs.org/get-value/-/get-value-2.0.6.tgz"
   integrity sha1-3BXKHGcjh8p2vTesCjlbogQqLCg=
 
+github-fork-ribbon-css@^0.2.3:
+  version "0.2.3"
+  resolved "https://registry.yarnpkg.com/github-fork-ribbon-css/-/github-fork-ribbon-css-0.2.3.tgz#bca2bc1987b6ca138a5619be4396d1819732a875"
+  integrity sha512-cmGBV4sivRwmnteSOkqMjN2cnP5/J1SU5aDCVYsBWHmDokZ/JjwGEkduCxY9IULHdCPpw1WSk5Cy8N1LF6jOEw==
+
 glob-base@^0.3.0:
   version "0.3.0"
   resolved "https://registry.npmjs.org/glob-base/-/glob-base-0.3.0.tgz"
