@@ -59,7 +59,7 @@ const Diagram = (params: {script: Funscript}) => {
                 .attr("stroke-width", 1.5)
                 .attr("d",  line);
 
-    }, [])
+    }, [data, ref])
     return (
         <svg
             ref={ref}
