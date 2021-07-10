@@ -1,10 +1,12 @@
 import './App.css';
 
-import { useEffect, useState} from "react";
+import {useCallback, useEffect, useState} from "react";
 import OIDC, { UserManager, UserManagerSettings} from "oidc-client";
 import SpotifyWebApi from "spotify-web-api-js";
 import spotifyLogo from "./Spotify_Logo_RGB_Green.png"
 import {AudioAnalysis, StructuredAudioAnalysis} from "./Analysis";
+import Diagram from "./Diagram"
+import {Funscript} from "./Funscript";
 
 function getLocalStorageOrDefault<T>(key:any, defaultValue: T): T {
   const stored = localStorage.getItem(key);
@@ -57,6 +59,8 @@ function App() {
 
 
     const [currentAnalysis, setCurrentAnalysis] = useState<[SpotifyApi.AudioFeaturesResponse, StructuredAudioAnalysis] | undefined>(undefined);
+
+    const [currentFunscript, setCurrentFunscript] = useState<Funscript | undefined>(undefined);
 
 
 
@@ -131,7 +135,7 @@ function App() {
     async function reactOnLoginCallback() {
         if (window.location.href.indexOf('code=') > 0) {
             await userManager.signinRedirectCallback(window.location.href);
-            window.location.href = window.location.origin
+            window.location.href = window.location.origin + window.location.pathname
         }
     }
     reactOnLoginCallback();
@@ -176,25 +180,36 @@ function App() {
         const mapped = organize(analysisResult);
 
         const featureKey = `track-features--${playingTrack!.item!.id}`;
-        const featureStored = getLocalStorageOrDefault<SpotifyApi.AudioFeaturesResponse | undefined>(key, undefined);
+        const featureStored = getLocalStorageOrDefault<SpotifyApi.AudioFeaturesResponse | undefined>(featureKey, undefined);
         let featureRes: SpotifyApi.AudioFeaturesResponse;
         if (featureStored) {
             featureRes = featureStored;
         } else {
             featureRes = await spotifyApi.getAudioFeaturesForTrack(playingTrack!.item!.id);
-            localStorage.setItem(featureKey, JSON.stringify(res))
+            localStorage.setItem(featureKey, JSON.stringify(featureRes))
         }
 
         setCurrentAnalysis([featureRes, mapped])
+
+        const actions = mapped.sections.flatMap(section => section.bars.flatMap(bar => bar.beats.map((beat, i) => ({
+            at: toMillisInt(beat.start),
+            pos: (i % 2 === 0) ? 90 : 0
+        }))))
+        const funscript: Funscript = { actions, inverted: false, range: 90, version: "1.0"}
+        setCurrentFunscript(funscript);
 
         console.info("mapped result: ", mapped)
 
     }
 
+    function toMillisInt(seconds: number) {
+      return Math.ceil(seconds * 1000.0)
+    }
+
 
     function organize(analysis: AudioAnalysis) : StructuredAudioAnalysis {
         function within(outer: { start: number, duration: number }, inner: { start: number, duration: number }): boolean {
-            return inner.start <= outer.start && inner.start + inner.duration <= outer.start + outer.duration
+            return inner.start >= outer.start && inner.start + inner.duration <= outer.start + outer.duration
         }
 
         return {...analysis, sections: analysis.sections.map(section => (
@@ -212,8 +227,29 @@ function App() {
                 }))}
     }
 
+    const downloadFunscript = useCallback(() => {
 
+        const json = JSON.stringify(currentFunscript, ['version', 'inverted', 'range', 'actions', 'pos', 'at'], 2);
+        var blob = new Blob([json], {type: "application/json"});
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.download = `${playingTrack?.item?.artists[0]!.name} - ${playingTrack?.item?.name}.json`;
+        document.body.appendChild(link);
+        link.dispatchEvent(
+            new MouseEvent('click', {
+                bubbles: true,
+                cancelable: true,
+                view: window
+            })
+        );
+        document.body.removeChild(link);
 
+    }, [currentFunscript, playingTrack])
+
+    function renderPercent(number: number) : string {
+      return `${Math.round(number * 100)}%`
+    }
 
   return (
     <div className="App">
@@ -229,18 +265,19 @@ function App() {
                     FunScripts can be played back with the <a href="https://github.com/FredTungsten/ScriptPlayer">ScriptPlayer</a> or
                 </p>
 
-                <p>
-                    This app is powered by
-                    <br/>
-                    <img width={128} src={spotifyLogo} alt="Spotify" />  Audio Analysis
-                </p>
+
 
                 <p>Hit <code>Login with Spotify</code> to get started.</p>
                 <button onClick={login}>Login with Spotify</button>
             </div>
             }
 
-
+            {
+                !playingTrack &&
+                    <div>
+                        <p>Time to choose a song! Use a Spotify device of your choice and start playback. Then reload this page.</p>
+                    </div>
+            }
             {
                 playingTrack &&
                 <div>
@@ -264,25 +301,37 @@ function App() {
                 currentAnalysis &&
                 <div>
                     <dl>
-                        <dt>Dancability: </dt><dd>{currentAnalysis[0].danceability}</dd>
-                        <dt>Acousticness: </dt><dd>{currentAnalysis[0].acousticness}</dd>
-                        <dt>Energy: </dt><dd>{currentAnalysis[0].energy}</dd>
-                        <dt>Liveness: </dt><dd>{currentAnalysis[0].liveness}</dd>
-                        <dt>Tempo: </dt><dd>{currentAnalysis[0].tempo}</dd>
+                        <dt>Dancability: </dt><dd>{renderPercent(currentAnalysis[0].danceability)}</dd>
+                        <dt>Acousticness: </dt><dd>{renderPercent(currentAnalysis[0].acousticness)}</dd>
+                        <dt>Energy: </dt><dd>{renderPercent(currentAnalysis[0].energy)}</dd>
+                        <dt>Liveness: </dt><dd>{renderPercent(currentAnalysis[0].liveness)}</dd>
+                        <dt>Tempo: </dt><dd>{renderPercent(currentAnalysis[0].tempo)} BPM</dd>
                     </dl>
-
-
                 </div>
             }
 
-            {user?.access_token &&
-            <p>
-                <button onClick={logout}>Logout</button>
-            </p>
-
+            {
+                currentFunscript &&
+                <div>
+                    <Diagram script={currentFunscript}/>
+                    <br/>
+                    <button onClick={downloadFunscript}>Download Funscript</button>
+                </div>
             }
 
+
+
         </header>
+        <p>
+            This app is powered by
+            <br/>
+            <img width={128} src={spotifyLogo} alt="Spotify" />  Audio Analysis
+        </p>
+        {user?.access_token &&
+        <p>
+            <button onClick={logout}>Logout</button>
+        </p>
+        }
     </div>
   );
 }
