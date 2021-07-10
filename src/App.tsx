@@ -35,7 +35,7 @@ function App() {
             token_endpoint: "https://accounts.spotify.com/api/token",
         },
         client_id: "5cb73d286b4848c4a53a7b5077ae3cf4",
-        redirect_uri: window.location.protocol + "//" + window.location.host + "/" + window.location.pathname,
+        redirect_uri: window.location.protocol + "//" + window.location.host + window.location.pathname,
         post_logout_redirect_uri: window.location.protocol + "//" + window.location.host + "/index",
         silent_redirect_uri: window.location.protocol + "//" + window.location.host + "/index",
         response_type: "code",
